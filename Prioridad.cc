@@ -79,23 +79,59 @@ Prioridad::DoRun (void)
 //  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetInternalQueue (1)->GetNPackets (), 0, "initialized non-zero");
 //  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetInternalQueue (2)->GetNPackets (), 0, "initialized non-zero");
 
-                                      // Service name       priority         band
-  TestTosValue (queueDisc, 0x00, 1);  // Normal service  -> Best Effort (0) -> 1
-  TestTosValue (queueDisc, 0x02, 1);  // MMC             -> Best Effort (0) -> 1
-  TestTosValue (queueDisc, 0x04, 1);  // MR              -> Best Effort (0) -> 1
-  TestTosValue (queueDisc, 0x06, 1);  // MMC+MR          -> Best Effort (0) -> 1
-  TestTosValue (queueDisc, 0x08, 2);  // Max. Throughput -> Bulk (2)        -> 2
-  TestTosValue (queueDisc, 0x0a, 2);  // MMC+MT          -> Bulk (2)        -> 2
-  TestTosValue (queueDisc, 0x0c, 2);  // MR+MT           -> Bulk (2)        -> 2
-  TestTosValue (queueDisc, 0x0e, 2);  // MMC+MR+MT       -> Bulk (2)        -> 2
-  TestTosValue (queueDisc, 0x10, 0);  // Minimize Delay  -> Interactive (6) -> 0
-  TestTosValue (queueDisc, 0x12, 0);  // MMC+MD          -> Interactive (6) -> 0
-  TestTosValue (queueDisc, 0x14, 0);  // MR+MD           -> Interactive (6) -> 0
+  //                                     // Service name       priority         band
+  // TestTosValue (queueDisc, 0x00, 1);  // Normal service  -> Best Effort (0) -> 1
+  // TestTosValue (queueDisc, 0x02, 1);  // MMC             -> Best Effort (0) -> 1
+  // TestTosValue (queueDisc, 0x04, 1);  // MR              -> Best Effort (0) -> 1
+  // TestTosValue (queueDisc, 0x06, 1);  // MMC+MR          -> Best Effort (0) -> 1
+  // TestTosValue (queueDisc, 0x08, 2);  // Max. Throughput -> Bulk (2)        -> 2
+  // TestTosValue (queueDisc, 0x0a, 2);  // MMC+MT          -> Bulk (2)        -> 2
+  // TestTosValue (queueDisc, 0x0c, 2);  // MR+MT           -> Bulk (2)        -> 2
+  // TestTosValue (queueDisc, 0x0e, 2);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  // TestTosValue (queueDisc, 0x10, 0);  // Minimize Delay  -> Interactive (6) -> 0
+  // TestTosValue (queueDisc, 0x12, 0);  // MMC+MD          -> Interactive (6) -> 0
+  // TestTosValue (queueDisc, 0x14, 0);  // MR+MD           -> Interactive (6) -> 0
+  // TestTosValue (queueDisc, 0x16, 0);  // MMC+MR+MD       -> Interactive (6) -> 0
+  // TestTosValue (queueDisc, 0x18, 1);  // MT+MD           -> Int. Bulk (4)   -> 1
+  // TestTosValue (queueDisc, 0x1a, 1);  // MMC+MT+MD       -> Int. Bulk (4)   -> 1
+  // TestTosValue (queueDisc, 0x1c, 1);  // MR+MT+MD        -> Int. Bulk (4)   -> 1
+  // TestTosValue (queueDisc, 0x1e, 1);  // MMC+MR+MT+MD    -> Int. Bulk (4)   -> 1
+
+
+//1º  TestTosValue (queueDisc, 0x16, 0);  // MMC+MR+MD       -> Interactive (6) -> 0
+//2º TestTosValue (queueDisc, 0x1e, 1);  // MMC+MR+MT+MD    -> Int. Bulk (4)   -> 1
+//3º  TestTosValue (queueDisc, 0x06, 0);  // MMC+MR+MT       -> Best Effort(0)      -> 1
+//4º  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+
+TestTosValue (queueDisc, 0x1e, 0);  // MMC+MR+MT+MD    -> Int. Bulk (4)   -> 1
+
+
   TestTosValue (queueDisc, 0x16, 0);  // MMC+MR+MD       -> Interactive (6) -> 0
-  TestTosValue (queueDisc, 0x18, 1);  // MT+MD           -> Int. Bulk (4)   -> 1
-  TestTosValue (queueDisc, 0x1a, 1);  // MMC+MT+MD       -> Int. Bulk (4)   -> 1
-  TestTosValue (queueDisc, 0x1c, 1);  // MR+MT+MD        -> Int. Bulk (4)   -> 1
-  TestTosValue (queueDisc, 0x1e, 1);  // MMC+MR+MT+MD    -> Int. Bulk (4)   -> 1
+  TestTosValue (queueDisc, 0x16, 0);  // MMC+MR+MD       -> Interactive (6) -> 0
+  TestTosValue (queueDisc, 0x16, 0);  // MMC+MR+MD       -> Interactive (6) -> 0
+
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // MR              -> Best Effort (0) -> 1
+
+  TestTosValue (queueDisc, 0x06, 0);  // Max. Throughput -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // MMC+MT          -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // MR+MT           -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // Normal service  -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x06, 0);  // MMC             -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x06, 0);  // MR              -> Best Effort (0) -> 1TestTosValue (queueDisc, 0x08, 0);  // Max. Throughput -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MT          -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MR+MT           -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x06, 0);  // MR              -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x06, 0);  // Normal service  -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x06, 0);  // MMC             -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x06, 0);  // MR              -> Best Effort (0) -> 1
 
   NS_LOG_DEBUG("Comenzamos a sacar paquetes de la cola (tam: " << queueDisc->GetNPackets() << ")" );
   //Se sacan primero los de menor banda, y en la misma banda los de menor prioridad
@@ -105,6 +141,23 @@ Prioridad::DoRun (void)
     queueItem = queueDisc -> Dequeue ();
     NS_LOG_DEBUG("Desencolado: " << queueItem);
   }
+
+  TestTosValue (queueDisc, 0x08, 0);  // Max. Throughput -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0a, 0);  // MMC+MT          -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0c, 0);  // MR+MT           -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x0e, 0);  // MMC+MR+MT       -> Bulk (2)        -> 2
+  TestTosValue (queueDisc, 0x00, 0);  // Normal service  -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x02, 0);  // MMC             -> Best Effort (0) -> 1
+  TestTosValue (queueDisc, 0x04, 0);  // MR              -> Best Effort (0) -> 1
+
+  NS_LOG_DEBUG("Comenzamos a sacar paquetes de la cola (tam: " << queueDisc->GetNPackets() << ")" );
+  //Se sacan primero los de menor banda, y en la misma banda los de menor prioridad
+  tamCola = queueDisc->GetNPackets();
+  for(uint32_t j = 0; j < tamCola ; j++){
+    queueItem = queueDisc -> Dequeue ();
+    NS_LOG_DEBUG("Desencolado: " << queueItem);
+  }
+
 
 }
 void
