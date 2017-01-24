@@ -37,6 +37,19 @@
 
 // Y ya está, osea, solventar ese problema de sockets y andaría todo a full. O eso creo. No sé cuanto tiempo llevo ya mirando estos códigos.
 
+
+//Alberto
+// Son las 5:40 y quiero suicidarme por no encontrar el fallo
+// He toqueteado un poco, sigue sin poderser conectar de una subred a otra, entre la misma subred su existe trafico TFTP ( NO SE COMO ?
+// Creo que es un problema de la creación de escenario  que los equipos no reconocen a otro para que haga de router o que el router no es capas de pasar un paquete de un lado a otro, no estoy seguro 
+// Usad mi version y la de alvaro por si se inspira alguno en donde puede estar el fallo 
+
+
+
+
+
+
+
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/csma-module.h>
@@ -138,7 +151,7 @@ int simulacion (uint32_t nCsma, std::string tasa_izquierda, std::string tasa_der
   NS_LOG_INFO ("Instalando sumideros");
   PacketSinkHelper sinkUdp ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), PORT_VOIP)));
   PacketSinkHelper sinkFtp ("ns3::TcpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), PORT_FTP)));
-  PacketSinkHelper sinkHTTP ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), PORT_VOIP)));
+  PacketSinkHelper sinkHTTP ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny(), PORT_HTTP)));
 
   for (unsigned index_voip = 2; index_voip < (1+equiposVoIP+1); index_voip++) 
   {
@@ -183,17 +196,29 @@ int simulacion (uint32_t nCsma, std::string tasa_izquierda, std::string tasa_der
   NS_LOG_INFO ("Instalando telefonos VoIP");
   for (unsigned index_voip = 2; index_voip < (1+equiposVoIP+1); index_voip++) 
   {
+
+
+    TypeId tidIzq = TypeId::LookupByName ("ns3::UdpSocketFactory");
+    Ptr<Socket> recvSinkIzq = Socket::CreateSocket (escenario.GetNode("CSMADerecha",index_voip), tidIzq);
+    TypeId tidDer = TypeId::LookupByName ("ns3::UdpSocketFactory");
+    Ptr<Socket> recvSinkDer = Socket::CreateSocket (escenario.GetNode("CSMAIzquierda",index_voip), tidDer);
+
     InetSocketAddress socketAddressTelDer (escenario.GetIPv4Address("CSMADerecha",index_voip), PORT_VOIP);
     socketAddressTelDer.SetTos(TOS_VOIP);
     
     InetSocketAddress socketAddressTelIzq (escenario.GetIPv4Address("CSMAIzquierda",index_voip), PORT_VOIP);
     socketAddressTelIzq.SetTos(TOS_VOIP);
     
-    VoipHelper telefonoDerecha (escenario.GetIPv4Address("CSMADerecha",index_voip), PORT_VOIP, maxHablando, minHablando, maxSilencio, minSilencio,socketAddressTelDer);
-    VoipHelper telefonoIzquierda (escenario.GetIPv4Address("CSMAIzquierda",index_voip), PORT_VOIP, maxHablando, minHablando, maxSilencio, minSilencio,socketAddressTelIzq);
+    VoipHelper telefonoDerecha (escenario.GetIPv4Address("CSMADerecha",index_voip-1), PORT_VOIP, maxHablando, minHablando, maxSilencio, minSilencio,socketAddressTelDer);
+    VoipHelper telefonoIzquierda (escenario.GetIPv4Address("CSMADerecha",index_voip-1), PORT_VOIP, maxHablando, minHablando, maxSilencio, minSilencio,socketAddressTelDer);
     
-    ApplicationContainer appVoipDerecha = telefonoDerecha.Install(escenario.GetNode("CSMADerecha", index_voip));
-    ApplicationContainer appVoipIzquierda = telefonoIzquierda.Install(escenario.GetNode("CSMAIzquierda", index_voip));
+    ApplicationContainer appVoipDerecha = telefonoDerecha.Install(escenario.GetNode("CSMADerecha", 1));
+    ApplicationContainer appVoipIzquierda = telefonoIzquierda.Install(escenario.GetNode("CSMAIzquierda", 1));
+
+
+    recvSinkIzq->Bind (socketAddressTelIzq);
+    recvSinkDer->Bind (socketAddressTelDer);
+
     appVoipDerecha.Start (Seconds (T_INICIO));
     appVoipDerecha.Stop (Seconds (T_FINAL));
     appVoipIzquierda.Start (Seconds (T_INICIO));
@@ -213,9 +238,9 @@ int simulacion (uint32_t nCsma, std::string tasa_izquierda, std::string tasa_der
     
     FTPHelper ftpDerecha(escenario.GetIPv4Address("CSMADerecha",index_ftp), PORT_FTP, socketAddressFTPDer);
     FTPHelper ftpIzquierda(escenario.GetIPv4Address("CSMAIzquierda",index_ftp), PORT_FTP, socketAddressFTPIzq);
-    ApplicationContainer appFtpDerecha = ftpDerecha.Install (escenario.GetNode("CSMADerecha", index_ftp));
-    ApplicationContainer appFtpIzquierda = ftpIzquierda.Install (escenario.GetNode("CSMAIzquierda", index_ftp));
-    appFtpDerecha.Start (Seconds (T_INICIO));
+    ApplicationContainer appFtpDerecha = ftpDerecha.Install (escenario.GetNode("CSMADerecha", 0));
+    ApplicationContainer appFtpIzquierda = ftpIzquierda.Install (escenario.GetNode("CSMAIzquierda", 0));
+     appFtpDerecha.Start (Seconds (T_INICIO));
     appFtpDerecha.Stop (Seconds (T_FINAL));
     appFtpIzquierda.Start (Seconds (T_INICIO));
     appFtpIzquierda.Stop (Seconds (T_FINAL));
@@ -231,13 +256,13 @@ int simulacion (uint32_t nCsma, std::string tasa_izquierda, std::string tasa_der
     InetSocketAddress socketAddressHTTPIzq (escenario.GetIPv4Address("CSMAIzquierda", index_http), PORT_HTTP);
     socketAddressHTTPIzq.SetTos(TOS_HTTP);
     
-    HTTPHelper httpDerecha(escenario.GetIPv4Address("CSMADerecha",index_http), PORT_HTTP,maxOnHTTP, minOnHTTP, maxOffHTTP, minOffHTTP,socketAddressHTTPDer);
-    HTTPHelper httpIzquierda(escenario.GetIPv4Address("CSMAIzquierda",index_http), PORT_HTTP,maxOnHTTP, minOnHTTP, maxOffHTTP, minOffHTTP,socketAddressHTTPIzq);
+    HTTPHelper httpDerecha(escenario.GetIPv4Address("CSMAIzquierda",index_http), PORT_HTTP,maxOnHTTP, minOnHTTP, maxOffHTTP, minOffHTTP,socketAddressHTTPDer);
+    HTTPHelper httpIzquierda(escenario.GetIPv4Address("CSMADerecha",index_http), PORT_HTTP,maxOnHTTP, minOnHTTP, maxOffHTTP, minOffHTTP,socketAddressHTTPIzq);
     
-    ApplicationContainer apphttpDerecha = httpDerecha.Install (escenario.GetNode("CSMADerecha", index_http));
-    ApplicationContainer apphttpIzquierda = httpIzquierda.Install (escenario.GetNode("CSMAIzquierda", index_http));
+    ApplicationContainer apphttpDerecha = httpDerecha.Install (escenario.GetNode("CSMADerecha", 0));
+    ApplicationContainer apphttpIzquierda = httpIzquierda.Install (escenario.GetNode("CSMAIzquierda", 0));
     
-    apphttpDerecha.Start (Seconds (T_INICIO));
+       apphttpDerecha.Start (Seconds (T_INICIO));
     apphttpDerecha.Stop (Seconds (T_FINAL));
     apphttpIzquierda.Start (Seconds (T_INICIO));
     apphttpIzquierda.Stop (Seconds (T_FINAL));
@@ -246,8 +271,8 @@ int simulacion (uint32_t nCsma, std::string tasa_izquierda, std::string tasa_der
   }
   //----------------------------------------------------------------------------
   // ACTIVAR PCAP
-  escenario.EnablePCAPLogging ("CSMAIzquierda");
-  escenario.EnablePCAPLogging ("CSMADerecha");
+    escenario.EnablePCAPLogging ("CSMAIzquierda");
+
   NS_LOG_INFO ("Ejecutando simulacion...");
   Simulator::Stop(Seconds(T_FINAL));
   Simulator::Run();
